@@ -13,21 +13,31 @@ private:
 	float screenY;
 	float floorX = 100;
 	float floorY = 85;
-	float slowness = 0.0;
 	float x = 0.0, y = 0.0;
 	float width = 700.0, height = 8.0;
 	float leftX = x, bottomY = y, rightX = x+width, topY = y+height;
-	float rightSpeed = 220.0f;
-	float leftSpeed = 220.0f;
+	float rightSpeed = 300.0f;
+	float leftSpeed = 300.0f;
+	float downSpeed = 50.0f;
+	float upSpeed = 50.0f;
+	int cooldownRight = 0.0;
+	bool direction = false;
 
 public:
+	bool dashFinished = false;
+
 	GLuint platform_texture = 0;
 	void drawPlatform();
+	void updateMeleeLeft(Player p,float delta);
+	void updateMeleeRight(Player p, float delta);
+
 	void moveLeft(float delta);
 	void moveRight(float delta);
+	void moveDown(float delta);
+	void moveUp(float delta);
 	void setX(float x);
 	void setY(float y);
-	void setSlowness(float slow);
+
 	float getX(void);
 	float getY(void);
 };
@@ -40,6 +50,14 @@ inline void Platform::moveRight(float delta)
 inline void Platform::moveLeft(float delta)
 {
 	screenX = screenX + (leftSpeed * delta);
+}
+
+inline void Platform::moveDown(float delta) {
+	screenY = screenY - (downSpeed * delta);
+}
+
+inline void Platform::moveUp(float delta) {
+	screenY = screenY + (upSpeed * delta);
 }
 
 inline float Platform::getX()
@@ -60,8 +78,4 @@ inline void Platform::setX(float x)
 inline void Platform::setY(float y)
 {
 	screenY = y;
-}
-
-inline void Platform::setSlowness(float slow) {
-	this->slowness = slow;
 }

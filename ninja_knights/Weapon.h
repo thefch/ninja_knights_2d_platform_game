@@ -1,5 +1,6 @@
 //#pragma once
 #include "Header.h"
+
 class Weapon
 {
 private:
@@ -20,18 +21,21 @@ public:
 
 	GLuint weaponTex = 0;
 	void draw(bool walkingLeft, float px,float py);
-	void drawWeaponCollisionLine(float px,float py, float x, float y, float r, float g, float b);
-	void update(float delta, float eu_distance,Enemy enemy);
+	void drawWeaponCollisionLine(float x, float y, float r, float g, float b);
+	void update(float delta, float eu_distance,Enemy *enemy);
 	void setTexture(GLuint tex);
 	void setThrowing(bool x);
 	void setAlive(bool x);
 
 	float getXPoint();
 	float getYPoint();
+	float getYPos();
+	float getXPos();
 	bool getDestroyWeapon();
 	bool getThrowing();
 	bool getAlive();
 	int getKunaiPosition();
+	
 };
 
 inline float Weapon::getYPoint() {
@@ -56,6 +60,14 @@ inline bool Weapon::getThrowing() {
 
 inline bool Weapon::getAlive() {
 	return this->alive;
+}
+
+inline float Weapon::getXPos() {
+	return this->xPos;
+}
+
+inline float Weapon::getYPos() {
+	return this->yPos;
 }
 
 inline void Weapon::setTexture(GLuint tex) {

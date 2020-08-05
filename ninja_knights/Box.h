@@ -4,12 +4,19 @@ class Box
 {
 private:
 	float leftX, bottomY, rightX, topY, width,height;
+	float xPos = 0.0;
+	float yPos = 0.0;
+	float ySpeed = 5.0;
 	int landscapeCounter = 0;
 	int texTimer = 0;
 	int counter = 0;
-	bool showTex = false;
+	bool showTex = true;
+	float spin = 0.0;
 	//float onPlatformX;
 public:
+	bool goUp = false;
+	bool goDown = false;
+	bool leftSide = false;
 	Box() {};
 	Box(float _x, float _y, float _width, float _height);
 	//Box::Box(float _x, float _y, float _width, float _height, GLuint texture);
@@ -22,13 +29,19 @@ public:
 	float getTopY();
 	float getHeight();
 	float getWidth();
+	float getXPos();
+	float getYPos();
+	float getYSpeed();
 	//float getOnPlatformX();
 
 	//void setOnPlatformX(float x);
 	void draw();
-	void draw(float texMap);
+	void drawBGMainScreen();
+	void draw(float texMapX, float texMapY, float xtranslate, float ytranslate);
 	void drawWithTex(GLuint healthBar);
-	void drawLandscape();
+	void drawTrain(float delta);
+	void drawMovingBox();
+	void updateMovingBox(float delta);
 };
 
 inline float Box::getHeight() {
@@ -57,4 +70,16 @@ inline float Box::getLeftX()
 inline float Box::getTopY()
 {
 	return topY;
+}
+
+inline float Box::getXPos() {
+	return this->xPos;
+}
+
+inline float Box::getYSpeed() {
+	return this->ySpeed;
+}
+
+inline float Box::getYPos() {
+	return this->yPos;
 }

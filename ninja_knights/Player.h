@@ -9,11 +9,11 @@
 
 
 #include "Header.h"
+//#include "Player.h"
 #include <iostream>
 #include <vector>
 class Player {
 private:
-	//float leftX, bottomY, rightX, width, height;
 	float x = 50.0;
 	float y = 8.0;
 	float width = 10.0;
@@ -26,18 +26,26 @@ private:
 	float posX;
 	float posY;	
 	float playerX = 0.0;
+	float previousX = 0.0;
 	float xspeed = 220.0f;
 	float velocity;
 	float maxHeight = 200.0;
 	float time = 0.0;
 	float currentTime;
 	float previousTime = 0.0;	
-	int attackTimer = 0;
+	float scaler = 0.4f;
+	//int attackTimer = 0;
 	int counter = 0;
 	int waitCounter = 0;
-	int magazineCounter = -1;
-		
+	int magazineCounter = 0;
+	int maxKunai = 20;
+	int enemiesKilled = 0;
+	int frameCounter = 0;
+
 		/*textures*/
+	int glideTextureCounter = 0;
+	int throwTextureCounter = 0;
+	int attackTextureCounter = 2;
 	int deadTextureCounter = 0;
 	int idleTextureCounter = 0;
 	int walkTextureCounter = 0;
@@ -46,10 +54,12 @@ private:
 	int walkTimer = 0;
 	int jumpTimer = 0;
 	int deadTimer = 0;
+	int throwTimer = 0;
+	int glideTimer = 0;
+	int attackMeleeTimer = 0;
 	int healthBarCounter = 0;
 		/**********/
 
-	//bool oneTime = true;
 	bool dead = false;
 	bool fire = false;
 	bool alive = true;
@@ -65,25 +75,32 @@ private:
 	bool onBox5 = false;
 	bool walking = true;
 	bool running = false;
+	bool gliding = true;
 	bool walkingLeft = false;
 	bool walkingRight = false;
 	bool canDecrease = true;
 	bool maxMagazine = false;
 	bool weaponThrew = false;
 	bool isThrowing = false;
+	bool attacking = false;
 	bool firstThrow = true;
 	bool posInfo = false;
-	bool canThrow = true;
-	//bool jumpTexture = false;
-	//bool isIdle = false;
+	bool throwing = false;
+	bool dashAttackFinished = false;
+	bool oneMoreDash = false;
 	CollisionBox col_box;
 	Box healthBar;
 	Weapon kunai;
 	std::vector<Weapon> magazine;
 public:
+	bool canDash = false;
+	bool throwFinished = false;
 	GLuint charIdle[10];
 	GLuint charDeadTex[10];
 	GLuint charRunTex[10];
+	GLuint charThrowTex[10];
+	GLuint charGlideTex[10];
+	GLuint charAttackTex[10];
 	GLuint charJumpTex[2];
 	GLuint healthBarTex[4];
 
@@ -93,9 +110,9 @@ public:
 	GLfloat getY();
 	Player();
 	~Player();
-	void drawCharacter();
-	void drawHealthBar();
-	void drawWeapon(bool kunaiDirection,float px,float py,float delta, std::vector<Enemy> enemies);
+	int getKills();
+	int getHealth();
+	int getKunaiCounter();
 	void initMagazine();
 	//void removeMagazine();
 	//void moveDown(void);
@@ -126,22 +143,33 @@ public:
 	void setPlayerX(float px);
 	void setThrowing(bool x);
 	void setPosInfo(bool x);
-	void setCanThrow(bool x);
+	void setGliding(bool glide);
+	void setAttacking(bool attack);
+	void setOneMoreDash(bool x);
+	void setKills(int x);
 	//void setWeaponTex(GLuint tex);
+	void addToX(float x);
+	void addToY(float y);
 	void increaseHealth();
 	
+	/*DRAW AND UPDATES*/
 	void drawCollisionBox();
-	void jump();
-	void update(float delta);
+	void drawCharacter();
+	void drawHealthBar();
+	void drawWeapon(bool kunaiDirection, float px, float py, float delta, std::vector<Enemy*> enemies, std::vector<Enemy*> enemiesAI);
+	void update(float delta, float platformX, bool jumpPressed,std::vector<Box> boxes);
 	void updateWeapon();
+	void updateMeleeLeft(float delta);
+	void updateMeleeRight(float delta);
+	void updateMeleeAttack(bool playerLeftDirection, float meleeXPos, float meleeYPos, float delta, std::vector<Enemy*> enemies);
+	void updateMeleeAttackAI(bool playerLeftDirection, float px, float py, float delta, std::vector<Enemy*> enemies);
 	void platformsCollisionUpdate(float platformX, bool jumpPressed, std::vector<Box> boxes);
 	bool checkBoxJumping(float platformX, std::vector<Box> boxes);
-	bool checkBoxFalling(float platformX);
+	bool checkBoxFalling(float platformX, std::vector<Box> boxes);
 	bool checkOnBoxUpdate(float platformX);
-	//void checkBoxSideCollision(float platformX, std::vector<Box> boxes);
-
-	//void updateBoxCollisions(Platform & platform, Box & box1, Box & box2, Box & box3, Box & box4);
-	//void updateBoxCollisions(Platform platform, Player p, Box box1, Box box2, Box box3, Box box4);
+	void sideCollision(float platformX, std::vector<Box> boxes);
+	void jump();
+	
 	bool wait();
 	bool checkFloor();
 	bool isJumping();
@@ -162,13 +190,17 @@ public:
 	bool getThrowing();
 	bool decreaseHealth();
 	bool getPosInfo();
-	bool getCanThrow();
-	//bool getIdle();
+	bool getGliding();
+	bool getAttacking();
+	bool getDashAttackFinished();
+	bool getOneMoreDash();
 	float getWidth();
 	float getHeight();
 	float getEU_distance(float enemyX, float enemyY, float platformX, float platformY);
-	
+
+
 	Weapon getWeapon();
+	std::vector<Weapon> getMagazine();
 };
 
 
@@ -196,7 +228,6 @@ inline void Player::moveRight(float delta)
 
 inline bool Player::decreaseHealth() {
 	this->healthBarCounter++;
-	std::cout << "IN DECREASE   " << healthBarCounter << std::endl;
 	if (healthBarCounter >= 3) {
 		healthBarCounter = 3;
 		alive = false;
@@ -301,8 +332,8 @@ inline float Player::getHeight() {
 }
 
 inline float Player::getEU_distance(float enemyX, float enemyY, float platformX,float platformY) {
-	float pCurrentX = -platformX + leftX + width + posX;
-	float pCurrentY = platformY + posY + height;
+	float pCurrentX = posX - platformX + 50;
+	float pCurrentY = (posY + height / 2) * 2;
 	return sqrt(pow(enemyX - pCurrentX, 2) + pow(enemyY - pCurrentY, 2));
 }
 
@@ -328,15 +359,39 @@ inline Weapon Player::getWeapon() {
 }
 
 inline bool Player::getThrowing() {
-	return this->isThrowing;
+	return this->throwing;
 }
 
 inline bool Player::getPosInfo() {
 	return this->posInfo;
 }
 
-inline bool Player::getCanThrow() {
-	return this->canThrow;
+inline bool Player::getGliding() {
+	return this-> gliding;
+}
+
+inline std::vector<Weapon> Player::getMagazine() {
+	return this->magazine;
+}
+
+inline bool Player::getAttacking() {
+	return this->attacking;
+}
+
+inline bool Player::getOneMoreDash() {
+	return this->oneMoreDash;
+}
+
+inline int Player::getKills() {
+	return this->enemiesKilled;
+}
+
+inline int Player::getHealth() {
+	return this->healthBarCounter;
+}
+
+inline int Player::getKunaiCounter() {
+	return 10 - magazineCounter;
 }
 /**********************************************/
 
@@ -380,30 +435,31 @@ inline void Player::setOnBox(bool x)
 inline void Player::setOnBox1(bool x)
 {
 	this->onBox1 = x;
-	if (x) onBox2 = onBox3 = onBox4 = false;
+	if (x) onBox2 = onBox3 = onBox4 = onBox5 = false;
 }
 
 inline void Player::setOnBox2(bool x)
 {
 	this->onBox2 = x;
-	if (x) onBox1 = onBox3 = onBox4 = false;
+	if (x)onBox1 = onBox3 = onBox4 = onBox5 = false;
 }
 
 inline void Player::setOnBox3(bool x)
 {
 	this->onBox3 = x;
-	if (x) onBox1 = onBox2 = onBox4 = false;
+	if (x) onBox1 = onBox2 = onBox4 = onBox5 = false;
 }
 
 inline void Player::setOnBox4(bool x)
 {
 	this->onBox4 = x;
-	if (x) onBox1 = onBox2 = onBox3 = false;
+	if (x) onBox1 = onBox2 = onBox3 = onBox5 = false;
 }
 
 inline void Player::setOnBox5(bool x)
 {
 	this->onBox5 = x;
+	if(x) onBox1 = onBox2 = onBox3 = onBox4 = false;
 }
 
 inline void Player::setWalking(bool x)
@@ -450,8 +506,20 @@ inline void Player::setPosInfo(bool x) {
 	this->posInfo = x;
 }
 
-inline void Player::setCanThrow(bool x) {
-	this->canThrow = x;
+inline void Player::setGliding(bool glide) {
+	this->gliding = glide;
+}
+
+inline void Player::setAttacking(bool attack) {
+	this->attacking = attack;
+}
+
+inline void Player::setOneMoreDash(bool x) {
+	this->oneMoreDash = x;
+}
+
+inline void Player::setKills(int x) {
+	this->enemiesKilled = x;
 }
 
 inline bool Player::wait() {
@@ -462,9 +530,5 @@ inline bool Player::wait() {
 	}
 	else return false;
 }
-/*inline void Player::setIdle(bool idle)
-{
-	this->isIdle = idle;
-}*/
 
 /**********************************************/

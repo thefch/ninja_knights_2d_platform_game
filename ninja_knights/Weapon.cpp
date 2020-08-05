@@ -18,6 +18,7 @@ Weapon::Weapon(float _x, float _y, float _width, float _height)
 
 
 void Weapon::draw(bool walkingLeft, float px, float py) {
+	float matrix[16];
 	nv::Image img2;
 	if (img2.loadImageFromFile("Images/ninja/weapon/kunai.png"))
 	{
@@ -44,7 +45,13 @@ void Weapon::draw(bool walkingLeft, float px, float py) {
 	glEnable(GL_BLEND);	//enable blending
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);	//configure blending
 	//glTranslatef(px+xPos, yPos, 0.0);
-	glTranslatef(xPos+px, yPos+py, 0.0);
+	//this->yPos += py;
+	//yPos = py;
+	/*glGetFloatv(GL_MODELVIEW_MATRIX, matrix);
+	float xnew1 = matrix[0] * 4 + matrix[4] * -4 + matrix[12];
+	float ynew1 = matrix[1] * 4 + matrix[5] * -4 + matrix[13];*/
+	//cout << ynew1 << endl;
+	glTranslatef(xPos + px, yPos + (py*2), 0.0);
 	glPushMatrix();
 	glColor3f(1.0f, 1.0f, 1.0f);
 	if (walkingLeft) {
@@ -68,17 +75,15 @@ void Weapon::draw(bool walkingLeft, float px, float py) {
 	glDisable(GL_TEXTURE_2D);
 }
 
-void Weapon::update(float delta,float eu_distance,Enemy enemy) {
+void Weapon::update(float delta,float eu_distance,Enemy* enemy) {
 	if (goLeft) {
 		if (eu_distance < 3.6) {
-			enemy.setAlive(false);
-			//alive = false;
+			enemy->setAlive(false);
 			destroyKunai = true;
 		}
 		else if (xPos > -80) {
 			destroyKunai = false;
-			//xPos -= (550.0 * delta);
-			xPos -= (200.0 *delta);
+			xPos -= (300.0 *delta);
 		}
 		else {
 			destroyKunai = true;
@@ -86,14 +91,12 @@ void Weapon::update(float delta,float eu_distance,Enemy enemy) {
 	}
 	else {
 		if (eu_distance < 3.6) {
-			//alive = false;
-			enemy.setAlive(false);
+			enemy->setAlive(false);
 			destroyKunai = true;
 		}
 		else if (xPos < 80.0) {
 			destroyKunai = false;
-			//xPos += (550.0 * delta);
-			xPos += (200.0 *delta);
+			xPos += (300.0 *delta);
 		}
 		else {
 			destroyKunai = true;
@@ -101,13 +104,13 @@ void Weapon::update(float delta,float eu_distance,Enemy enemy) {
 	}
 }
 
-void Weapon::drawWeaponCollisionLine(float px,float py,float x, float y, float r, float g, float b)
+void Weapon::drawWeaponCollisionLine(float x, float y, float r, float g, float b)
 {
 	glColor3f(r, g, b);
 	glPushMatrix();
 		glBegin(GL_LINES);
-			glVertex2i(getXPoint() + px, getYPoint()+py);
-			glVertex2i(x, y);
+			glVertex2f(xPos, yPos);
+			glVertex2f(x, y);
 		glEnd();
 	glPopMatrix();
 }

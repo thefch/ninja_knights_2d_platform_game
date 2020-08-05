@@ -19,3 +19,22 @@ void Platform::drawPlatform() {
 	glDisable(GL_TEXTURE_2D);
 }
 
+
+
+void Platform::updateMeleeLeft(Player player,float delta) {
+	if (player.getAttacking()) {
+		screenX += (1000.0f * delta);
+	}
+	if (screenX >=0.0) {
+		screenX = 0;
+	}
+}
+
+void Platform::updateMeleeRight(Player player, float delta) {
+	if (player.getAttacking()) {
+		screenX -= (1000.0f*delta);
+	}
+	if (screenX < -450.0) {
+		screenX = -450.0;
+	}
+}
